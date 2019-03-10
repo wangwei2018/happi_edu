@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>happi--订单</title>
+    <link href="/static/css/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+
+</head>
+<body>
+<nav class="top ">
+    <div class="top_middle">
+
+
+        <a href="{% url 'user:index' %}">
+            <span style="color:#C40000;margin:0px" class=" glyphicon glyphicon-home redColor"></span>
+            happi_edu首页
+        </a>
+
+        <span>Hi，欢迎来happi_edu</span>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+        {% if user.username %}
+            <a href='#'>{{ user.username }}</a>
+            <a href="{% url 'user:logout' %}">退出</a>
+        {% else %}
+            <a href='{% url "user:login" %}'>请登录</a>
+            <a href="{% url 'user:register' %}">免费注册</a>
+        {% endif %}
+
+
+
+        <span class="pull-right">
+			<a href="{% url 'user:my_car' %}">
+			<span style="color:#C40000;margin:0px" class=" glyphicon glyphicon-shopping-cart redColor"></span>
+			购物车<strong></strong></a>
+            <a href="{% url 'user:submit_order' %}">我的订单</a>
+		</span>
+    </div>
+</nav>
+
+<div class="container">
+
+    <div class="panel panel-primary">
+
+        <div class="panel-heading">
+            <h3 class="panel-title">订单列表</h3>
+        </div>
+
+
+        <div class="panel-body">
+
+
+            <table class="table table-hover" style="margin-top:2px;">
+                <thead>
+                <tr>
+                    <th style=""><label><input id="allCheck" type="checkbox"/> 全选</label>
+                    </th>
+                    <th style="text-align: center"><label>订单编号</label></th>
+
+                    <th style="text-align: center"><label>课程名称</label></th>
+                    <th style="text-align: center"><label>数量</label></th>
+                    <th style="text-align: center"><label>总价</label></th>
+                    <th style="text-align: center"><label>订单生成时间</label></th>
+                </tr>
+                </thead>
+                <tbody id="tbody">
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12 col-lg-12 col-sm-12">
+            <div style="border-top:1px solid gray;padding:4px 10px;">
+                <div style="margin-left:20px;" class="pull-right total">
+                    <label>金额合计:<span class="currency">￥</span><span id="priceTotal"
+                                                                     class="large-bold-red">0</span></label>
+                </div>
+                <div class="pull-right">
+                    <label>您选择了<span id="itemCount" class="large-bold-red" style="margin:0 4px;">0</span>个订单</label>
+                </div>
+                <div class="pull-right selected" id="selected">
+                    <span id="selectedTotal"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align: right">
+        <button class="btn btn-primary" id="delete_order">删除订单</button>
+    </div>
+
+
+    <div style="margin:0px;text-align:center;margin-top:0px;">
+        <ul id="page" class="pagination" style="height:100px;">
+
+        </ul>
+
+    </div>
+
+</div>
+
+<script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"
+        integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.4.0/bootbox.min.js"></script>
+
+<script>
+    var per_page = 10;
+    var current_page = 1;
+
+    $.ajax({
+        url: "{% url 'user:get_order_info' %}",
+        method: 'post',
+        data: null,
+        dataType: 'json',
+        success: function (data) {
+            // 求出数据的总长度
+            var total_count = data.length;
+            // 设置么也显示的数据量
+
+            // 求出总页数
+            var total_page;
+            if (total_count % 10 == 0)
+                total_page = total_count / 10;
+            else
+                total_page = parseInt(total_count / 10) + 1;
+
+            if (total_count < per_page)
+                dataDisplay(data, 0, total_count);
+            else
+                dataDisplay(data, 0, per_page);
+
+            $('#delete_order').click(function () {
+                var count = parseInt($('#itemCount').text());
+                if (count <= 0) {
+                    bootbox.alert('请先选择订单!')
+                } else {
+                    var id_list = [];
+                    $('#tbody').find('tr').each(function () {
+                        // 找到选中的行
+                        if ($(this).find(":checkbox").prop('checked') == true) {
+                            // 找到订单id
+                            var id = parseInt($(this).find('.one').text());
+                            id_list.push(id);
+                        }
+                    });
+
+                    $.ajax({
+                        url: "{% url 'user:delete_order' %}",
+                        data: {'ids': JSON.stringify(id_list)},
+                        method: 'post',
+                        dataType: 'text',
+                        success: function (data) {
+                            window.location.reload();
+
+                        }
+
+
+                    });
+
+                }
+
+            });
+
+
+            // 根据总页数构造页码
+            createPage(total_page);
+
+
+            // 为所有数码设置点击事件
+
+            $('#page').on("click", 'li#li_click', function () {
+                $(this).addClass('active').siblings().removeClass('active');
+                var current_page = parseInt($(this).val());
+                var end = current_page * per_page;
+                if (end > total_count)
+                    end = total_count;
+                dataDisplay(data, (current_page - 1) * per_page, end);
+
+                // 如果是最后一页 就将右翻页设置为不可点击
+                if (current_page >= total_page) {
+                    $('#right_page').attr('class', 'disabled');
+                }
+
+                if (current_page <= 1) {
+                    $('#left_page').attr('class', 'disabled');
+                }
+
+                if (current_page > 1) {
+                    $('#left_page').removeClass('disabled');
+                }
+
+                if (current_page < total_page) {
+                    $('#right_page').removeClass('disabled');
+                }
+
+
+            });
+
+
+            $('#right_page').click(function () {
+                var calss_name = $('#right_page').attr('class');
+                if (calss_name != 'disabled') {
+                    // 获取当前页面数
+                    var current_page = $('.active').text();
+                    current_page = parseInt(current_page);
+                    current_page += 1;
+                    if (current_page == total_page)
+                        dataDisplay(data, (current_page - 1) * per_page, total_count);
+                    else
+                        dataDisplay(data, (current_page - 1) * per_page, (current_page) * per_page);
+
+                    // 将当前页面往后加1
+                    $('.active').next().addClass('active').siblings().removeClass('active');
+
+
+                    // 如果是最后一页 就将右翻页设置为不可点击
+                    if (current_page >= total_page) {
+                        $('#right_page').attr('class', 'disabled');
+                    }
+
+                    if (current_page > 1) {
+                        $('#left_page').removeClass('disabled');
+                    }
+
+                    if (current_page < total_page) {
+                        $('#right_page').removeClass('disabled');
+                    }
+
+
+                }
+
+
+            });
+
+
+            $('#left_page').click(function () {
+                var calss_name = $('#left_page').attr('class');
+                if (calss_name != 'disabled') {
+                    // 获取当前页面数
+                    var current_page = $('.active').text();
+                    current_page = parseInt(current_page);
+                    current_page -= 1;
+                    if (current_page == total_page)
+                        dataDisplay(data, (current_page - 1) * per_page, total_count);
+                    else
+                        dataDisplay(data, (current_page - 1) * per_page, (current_page) * per_page);
+
+                    // 将当前页面往后加1
+                    $('.active').prev().addClass('active').siblings().removeClass('active');
+
+
+                    // 如果是第一页 就将左翻页设置为不可点击
+                    if (current_page <= 1) {
+                        $('#left_page').attr('class', 'disabled');
+                    }
+
+                    if (current_page < total_page) {
+                        $('#right_page').removeClass('disabled');
+                    }
+
+
+                }
+
+
+            });
+
+
+        }
+    });
+
+    function get_total() {
+        var itemCount = 0;
+        var moneyCount = 0;
+        $('#tbody').find('tr').each(function () {
+            // 找到选中的行
+            if ($(this).find(":checkbox").prop('checked') == true) {
+                itemCount++;
+                moneyCount += parseInt($(this).find('.sum').text().slice(1));
+            }
+        });
+        $('#itemCount').text(itemCount);
+        $('#priceTotal').text(moneyCount);
+
+    }
+
+    function dataDisplay(data, start, end) {
+        $("#tbody").empty();
+        $('#allCheck').attr('checked', false);
+        $('#itemCount').text(0);
+        $('#priceTotal').text(0);
+        for (i = start; i < end; i++) {
+            var item = data[i];
+            var tr_inner = $('<tr></tr>');
+            var td_tool = $('<td></td>');
+            td_tool.css({'width': '80px'});
+
+            var input_check = $('<input></input>');
+            input_check.attr('type', 'checkbox');
+            input_check.attr('name', 'check');
+
+            td_tool.append(input_check);
+
+            var td1 = $('<td></td>');
+            td1.css({width: '100px', 'text-align': 'center'});
+            td1.attr('class', 'one');
+            var td2 = $('<td></td>');
+            td2.css({'text-align': 'center', 'width': '350px'});
+            var td3 = $('<td></td>');
+            td3.css({'text-align': 'center', 'width': '150px'});
+            var td4 = $('<td></td>');
+            td4.css({'text-align': 'center', 'width': '150px'});
+            td4.attr('class', 'sum');
+            var td5 = $('<td></td>');
+            td5.css({'text-align': 'center'});
+
+            td1.text(item.id);
+            td2.text(item.name);
+            td3.text(item.count);
+            td4.text('￥' + item.sum);
+            td5.text(item.time);
+
+            tr_inner.append(td_tool);
+            tr_inner.append(td1);
+            tr_inner.append(td2);
+            tr_inner.append(td3);
+            tr_inner.append(td4);
+            tr_inner.append(td5);
+            $("#tbody").append(tr_inner);
+        }
+
+        //全选框
+        $("#allCheck").click(function () {
+            $("input[name='check']").prop("checked", this.checked);
+            get_total();
+        });
+
+        //单选框
+        $("input[name='check']").change(function () {
+            if ($("input[name='check']").not("input:checked").size() <= 0) {
+                $("#allCheck").prop("checked", true);
+            } else {
+                $("#allCheck").prop("checked", false);
+            }
+
+            get_total();
+
+        });
+
+    }
+
+
+    function createPage(count) {
+        var li_left = $('<li></li>');
+        li_left.attr('class', 'disabled');
+        li_left.attr('id', 'left_page');
+        var a_left = $('<a></a>');
+        a_left.text('«');
+        li_left.append(a_left);
+        $('#page').append(li_left);
+
+        // 根据总页数构造页码
+        for (i = 0; i < count; i++) {
+            var li_inner = $('<li></li>');
+            li_inner.attr('id', 'li_click');
+            li_inner.attr('value', i + 1);
+            if (i == 0)
+                li_inner.attr('class', 'active');
+            var a_inner = $('<a></a>');
+            a_inner.text(i + 1);
+            li_inner.append(a_inner);
+            $('#page').append(li_inner);
+        }
+        var li_right = $('<li></li>');
+        li_right.attr('id', 'right_page');
+        if (count == 1) {
+            li_right.attr('class', 'disabled');
+
+        }
+        var a_right = $('<a></a>');
+        a_right.text('»');
+        li_right.append(a_right);
+
+        $('#page').append(li_right);
+    }
+</script>
+
+
+</body>
+</html>

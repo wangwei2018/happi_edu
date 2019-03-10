@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>happi-购物车</title>
+    <link href="/static/css/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/htmleaf-demo.css">
+    <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+
+    <script src="http://libs.baidu.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+    <script src="http://code.jquery.com/jquery-latest.js"></script>
+
+
+</head>
+<body>
+
+<nav class="top ">
+    <div class="top_middle">
+
+
+        <a href="{% url 'user:index' %}">
+            <span style="color:#C40000;margin:0px" class=" glyphicon glyphicon-home redColor"></span>
+            happi_edu首页
+        </a>
+
+        <span>Hi，欢迎来happi_edu</span>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+        {% if user.username %}
+            <a href='#'>{{ user.username }}</a>
+            <a href="{% url 'user:logout' %}">退出</a>
+        {% else %}
+            <a href='{% url "user:login" %}'>请登录</a>
+            <a href="{% url 'user:register' %}">免费注册</a>
+        {% endif %}
+
+
+
+        <span class="pull-right">
+			<a href="{% url 'user:my_car' %}">
+			<span style="color:#C40000;margin:0px" class=" glyphicon glyphicon-shopping-cart redColor"></span>
+			购物车<strong></strong></a>
+            <a href="{% url 'user:submit_order' %}">我的订单</a>
+		</span>
+    </div>
+</nav>
+
+<div class="container">
+
+    <div class="panel panel-primary">
+
+        <div class="panel-heading">
+            <h3 class="panel-title">购物车列表</h3>
+        </div>
+
+
+        <div class="panel-body">
+
+
+            <table class="table table-hover" style="margin-top:2px;">
+                <thead>
+                <tr>
+                    <th style="width:100px;"><label><input id="allCheck" type="checkbox"/> 全选</label></th>
+                    <th><label>课程名称</label></th>
+                    <th style="text-align: center"><label>数量</label></th>
+                    <th style="width:100px;text-align: center"><label>单价</label></th>
+                    <th style="width:100px;text-align: center"><label>总价</label></th>
+                    <th><label>适用人群</label></th>
+                    <th><label>处理</label></th>
+                </tr>
+                </thead>
+                <tbody id="tbody">
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12 col-lg-12 col-sm-12">
+            <div style="border-top:1px solid gray;padding:4px 10px;">
+                <div style="margin-left:20px;" class="pull-right total">
+                    <label>金额合计:<span class="currency">￥</span><span id="priceTotal"
+                                                                     class="large-bold-red">0</span></label>
+                </div>
+                <div class="pull-right">
+                    <label>您选择了<span id="itemCount" class="large-bold-red" style="margin:0 4px;">0</span>门课程，共计<span
+                            id="qtyCount" class="large-bold-red" style="margin:0 4px;">0</span>件</label>
+                </div>
+                <div class="pull-right selected" id="selected">
+                    <span id="selectedTotal"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align: right">
+        <button class="btn btn-primary" id="send_order">提交订单</button>
+    </div>
+
+    <div style="margin:0px;text-align:center;margin-top:0px;">
+        <ul id="page" class="pagination" style="height:100px;">
+
+        </ul>
+
+    </div>
+
+</div>
+
+<br>
+<br>
+
+
+</div>
+
+<script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"
+        integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.4.0/bootbox.min.js"></script>
+
+
+<script>
+
+
+    var per_page = 10;
+    var current_page = 1;
+
+    $.ajax({
+        url: "{% url 'user:get_car_info' %}",
+        method: 'post',
+        data: null,
+        dataType: 'json',
+        success: function (data) {
+            // 求出数据的总长度
+            var total_count = data.length;
+            // 设置么也显示的数据量
+
+            // 求出总页数
+            var total_page;
+            if (total_count % 10 == 0)
+                total_page = total_count / 10;
+            else
+                total_page = parseInt(total_count / 10) + 1;
+
+            if (total_count < per_page)
+                dataDisplay(data, 0, total_count);
+            else
+                dataDisplay(data, 0, per_page);
+
+            $('#send_order').click(function () {
+                var count = parseInt($('#itemCount').text());
+                if (count <= 0) {
+                    bootbox.alert('请先选择订单!')
+                } else {
+                    var id_list = [];
+                    $('#tbody').find('tr').each(function () {
+                        // 找到选中的行
+                        if ($(this).find(":checkbox").prop('checked') == true) {
+                            // 找到订单id
+                            var id = parseInt($(this).find('a').attr('value'));
+                            id_list.push(id);
+                        }
+                    });
+
+                    $.ajax({
+                        url: "{% url 'user:submit_order' %}",
+                        data: {'ids': JSON.stringify(id_list)},
+                        method: 'post',
+                        dataType: 'text',
+                        success: function (data) {
+                            if (data == 'success') {
+                                window.location.href = '/pay'
+                            }
+
+                        }
+
+
+                    });
+
+                }
+
+            });
+
+
+            $('#tbody').on('click', 'a#delete', function () {
+                var id = $(this).attr('value');
+                delete_info(id);
+            });
+
+            $('#tbody').on('click', 'button#btn-add', function () {
+
+                var id = $(this).val();
+                var key = parseInt($(this).attr('key'));
+                var count = parseInt($(this).next().val());
+                count += 1;
+                $(this).next().val(count);
+                var sum = count * data[key].price;
+                $(this).parent().parent().next().next().text('￥' + sum);
+                get_total();
+
+                $.ajax({
+                    url: "{% url 'user:add' %}",
+                    method: 'post',
+                    data: {id: id},
+                    success: function (data2) {
+                        if (data2 == 'success') {
+                            data[key].count = count;
+                        }
+                    }
+                })
+            });
+
+            $('#tbody').on('click', 'button#btn-subtract', function () {
+                var count = parseInt($(this).prev().val());
+                if (count > 1) {
+                    var id = $(this).val();
+                    var key = parseInt($(this).attr('key'));
+                    if (count > 1)
+                        count -= 1;
+                    $(this).prev().val(count);
+                    var sum = count * data[key].price;
+                    $(this).parent().parent().next().next().text('￥' + sum);
+                    get_total();
+                    $.ajax({
+                        url: "{% url 'user:reduce' %}",
+                        method: 'post',
+                        data: {id: id},
+                        success: function (data2) {
+                            if (data2 == 'success') {
+                                data[key].count = count;
+                            }
+                        }
+                    })
+                }
+
+            });
+
+
+            // 根据总页数构造页码
+            createPage(total_page);
+
+
+            // 为所有数码设置点击事件
+
+            $('#page').on("click", 'li#li_click', function () {
+                $(this).addClass('active').siblings().removeClass('active');
+                var current_page = parseInt($(this).val());
+                var end = current_page * per_page;
+                if (end > total_count)
+                    end = total_count;
+                dataDisplay(data, (current_page - 1) * per_page, end);
+
+                // 如果是最后一页 就将右翻页设置为不可点击
+                if (current_page >= total_page) {
+                    $('#right_page').attr('class', 'disabled');
+                }
+
+                if (current_page <= 1) {
+                    $('#left_page').attr('class', 'disabled');
+                }
+
+                if (current_page > 1) {
+                    $('#left_page').removeClass('disabled');
+                }
+
+                if (current_page < total_page) {
+                    $('#right_page').removeClass('disabled');
+                }
+
+
+            });
+
+
+            $('#right_page').click(function () {
+                var calss_name = $('#right_page').attr('class');
+                if (calss_name != 'disabled') {
+                    // 获取当前页面数
+                    var current_page = $('.active').text();
+                    current_page = parseInt(current_page);
+                    current_page += 1;
+                    if (current_page == total_page)
+                        dataDisplay(data, (current_page - 1) * per_page, total_count);
+                    else
+                        dataDisplay(data, (current_page - 1) * per_page, (current_page) * per_page);
+
+                    // 将当前页面往后加1
+                    $('.active').next().addClass('active').siblings().removeClass('active');
+
+
+                    // 如果是最后一页 就将右翻页设置为不可点击
+                    if (current_page >= total_page) {
+                        $('#right_page').attr('class', 'disabled');
+                    }
+
+                    if (current_page > 1) {
+                        $('#left_page').removeClass('disabled');
+                    }
+
+                    if (current_page < total_page) {
+                        $('#right_page').removeClass('disabled');
+                    }
+
+
+                }
+
+
+            });
+
+
+            $('#left_page').click(function () {
+                var calss_name = $('#left_page').attr('class');
+                if (calss_name != 'disabled') {
+                    // 获取当前页面数
+                    var current_page = $('.active').text();
+                    current_page = parseInt(current_page);
+                    current_page -= 1;
+                    if (current_page == total_page)
+                        dataDisplay(data, (current_page - 1) * per_page, total_count);
+                    else
+                        dataDisplay(data, (current_page - 1) * per_page, (current_page) * per_page);
+
+                    // 将当前页面往后加1
+                    $('.active').prev().addClass('active').siblings().removeClass('active');
+
+
+                    // 如果是第一页 就将左翻页设置为不可点击
+                    if (current_page <= 1) {
+                        $('#left_page').attr('class', 'disabled');
+                    }
+
+                    if (current_page < total_page) {
+                        $('#right_page').removeClass('disabled');
+                    }
+
+
+                }
+
+
+            });
+
+
+        }
+    });
+
+    function get_total() {
+        var itemCount = 0;
+        var moneyCount = 0;
+        var num = 0;
+        $('#tbody').find('tr').each(function () {
+            // 找到选中的行
+            if ($(this).find(":checkbox").prop('checked') == true) {
+                itemCount++;
+                num += parseInt($(this).find(':text').val())
+                moneyCount += parseInt($(this).find('.sum').text().slice(1));
+            }
+        });
+        $('#itemCount').text(itemCount);
+        $('#qtyCount').text(num);
+        $('#priceTotal').text(moneyCount);
+
+    }
+
+    function dataDisplay(data, start, end) {
+        $("#tbody").empty();
+        $('#allCheck').attr('checked', false);
+        $('#itemCount').text(0);
+        $('#qtyCount').text(0);
+        $('#priceTotal').text(0);
+        for (i = start; i < end; i++) {
+            var item = data[i];
+            var tr_inner = $('<tr></tr>');
+            var td_tool = $('<td></td>');
+            td_tool.css({'width': '100px'});
+
+            var input_check = $('<input></input>');
+            input_check.attr('type', 'checkbox');
+            input_check.attr('name', 'check');
+
+            td_tool.append(input_check);
+
+            var td1 = $('<td></td>');
+            td1.css({width: '200px'});
+            var td2 = $('<td></td>');
+            td2.css({'text-align': 'center', 'width': '180px'});
+            var td_price = $('<td></td>');
+            td_price.css({'text-align': 'center', 'width': '180px'});
+            var td_sum = $('<td></td>');
+            td_sum.css({'text-align': 'center', 'width': '180px'});
+            td_sum.attr('name', 'sum');
+            td_sum.attr('class', 'sum');
+            var td3 = $('<td></td>');
+            var td4 = $('<td></td>');
+            td1.text(item.name);
+
+
+            var div_td2 = $('<div></div>');
+            div_td2.attr('class', 'example');
+
+            var button_add = $('<button></button>');
+            button_add.attr('class', 'btn-add');
+            button_add.attr('id', 'btn-add');
+            button_add.attr('value', item.id);
+            button_add.attr('key', i);
+            button_add.text('+');
+            div_td2.append(button_add);
+
+            var input_td2 = $('<input></input>');
+            input_td2.attr('type', 'text');
+            input_td2.attr('class', 'input-counter');
+            input_td2.val(item.count);
+            input_td2.css({'width': '50px'});
+            div_td2.append(input_td2);
+
+            var btn_subtract = $('<button></button>');
+            btn_subtract.attr('class', 'btn-subtract');
+            btn_subtract.attr('id', 'btn-subtract');
+            btn_subtract.attr('value', item.id);
+            btn_subtract.attr('key', i);
+            btn_subtract.text('-');
+            div_td2.append(btn_subtract);
+
+            td2.append(div_td2);
+
+            td3.text(item.suit);
+
+            td_price.text('￥' + item.price);
+            var sum = item.price * item.count;
+            td_sum.text('￥' + sum);
+
+            var a_td = $('<a></a>');
+            a_td.attr('id', 'delete');
+            a_td.attr('value', item.id);
+            a_td.css({'cursor': 'pointer'});
+            a_td.text('删除');
+            td4.append(a_td);
+
+            tr_inner.append(td_tool);
+            tr_inner.append(td1);
+            tr_inner.append(td2);
+            tr_inner.append(td_price);
+            tr_inner.append(td_sum);
+            tr_inner.append(td3);
+            tr_inner.append(td4);
+            $("#tbody").append(tr_inner);
+        }
+
+        //全选框
+        $("#allCheck").click(function () {
+            $("input[name='check']").prop("checked", this.checked);
+            get_total();
+        });
+
+        $("input[name='check']").change(function () {
+            if ($("input[name='check']").not("input:checked").size() <= 0) {
+                $("#allCheck").prop("checked", true);
+            } else {
+                $("#allCheck").prop("checked", false);
+            }
+            get_total();
+        });
+
+    }
+
+    function click_num(data, num, total_count) {
+        $(this).addClass('active').siblings().removeClass('active');
+        var start = (num - 1) * per_page;
+        var end;
+        if (num * per_page > total_count)
+            end = total_count;
+        else
+            end = num * per_page;
+        dataDisplay(data, start, end)
+    }
+
+
+    function createPage(count) {
+        var li_left = $('<li></li>');
+        li_left.attr('class', 'disabled');
+        li_left.attr('id', 'left_page');
+        var a_left = $('<a></a>');
+        a_left.text('«');
+        li_left.append(a_left);
+        $('#page').append(li_left);
+
+        // 根据总页数构造页码
+        for (i = 0; i < count; i++) {
+            var li_inner = $('<li></li>');
+            li_inner.attr('id', 'li_click');
+            li_inner.attr('value', i + 1);
+            if (i == 0)
+                li_inner.attr('class', 'active');
+            var a_inner = $('<a></a>');
+            a_inner.text(i + 1);
+            li_inner.append(a_inner);
+            $('#page').append(li_inner);
+        }
+        var li_right = $('<li></li>');
+        li_right.attr('id', 'right_page');
+        if (count == 1) {
+            li_right.attr('class', 'disabled');
+
+        }
+        var a_right = $('<a></a>');
+        a_right.text('»');
+        li_right.append(a_right);
+
+        $('#page').append(li_right);
+    }
+
+    function delete_info(id) {
+
+        bootbox.confirm({
+            title: "警告:", message: "确认从购物车中删除此订单吗?", buttons: {
+                confirm: {
+                    label: '确认',
+                    className: 'btn-danger',
+                },
+                cancel: {
+                    label: '取消',
+                    className: 'btn-default'
+                }
+            }, callback: function (result) {
+                if (result) {
+                    $.ajax({
+                        url: "{% url 'user:delete' %}",
+                        data: {id: id},
+                        method: 'post',
+                        dataType: 'text',
+                        success: function (data) {
+                            if (data == 'success') {
+                                window.location.reload();
+                            }
+                        }
+                    })
+                }
+            }
+        });
+
+
+    }
+
+
+</script>
+
+
+</body>
+</html>

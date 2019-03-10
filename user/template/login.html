@@ -1,0 +1,208 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>happi_edu--登录</title>
+    <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+    <style>
+        /* track base Css */
+        .container {
+            margin-top: 15px;
+        }
+
+        .red {
+            color: red;
+        }
+
+        #ehong-code-input {
+            width: 42px;
+            letter-spacing: 2px;
+            margin: 0px 8px 0px 0px;
+        }
+
+        .ehong-idcode-val {
+            position: relative;
+            padding: 1px 4px 1px 4px;
+            top: 0px;
+            *top: -3px;
+            letter-spacing: 4px;
+            display: inline;
+            cursor: pointer;
+            font-size: 16px;
+            font-family: "Courier New", Courier, monospace;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .ehong-idcode-val0 {
+            border: solid 1px #A4CDED;
+            background-color: #ECFAFB;
+        }
+
+        .ehong-idcode-val1 {
+            border: solid 1px #A4CDED;
+            background-color: #FCEFCF;
+        }
+
+        .ehong-idcode-val2 {
+            border: solid 1px #6C9;
+            background-color: #D0F0DF;
+        }
+
+        .ehong-idcode-val3 {
+            border: solid 1px #6C9;
+            background-color: #DCDDD8;
+        }
+
+        .ehong-idcode-val4 {
+            border: solid 1px #6C9;
+            background-color: #F1DEFF;
+        }
+
+        .ehong-idcode-val5 {
+            border: solid 1px #6C9;
+            background-color: #ACE1F1;
+        }
+
+        .ehong-code-val-tip {
+            font-size: 12px;
+            color: #1098EC;
+            top: 0px;
+            *top: -3px;
+            position: relative;
+            margin: 0px 0px 0px 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="http://code.jquery.com/jquery-latest.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+<div class="container">
+    <div class="col-md-6 col-md-offset-3">
+        <div id="form" method="post" class="">
+            {#            {% if status %}#}
+            {#                {% if status == 'success' %}#}
+            {#                    <div id="success" class="alert alert-success" role="alert" style="text-align: center;">#}
+            {#                        注册成功,请登录#}
+            {#                    </div>#}
+            {##}
+            {#                {% endif %}#}
+            {#            {% endif %}#}
+            <div class="modal-header">
+                <h4 class="modal-title" id="myModalLabel">
+                    登录
+                </h4>
+            </div>
+
+            <br>
+
+            <div class="form-group has-feedback">
+                <label for="username">用户名</label>
+                <div class="input-group">
+                    <span class="input-group-addon"><span class="glyphicon glyphicon-user"></span></span>
+                    <input id="username" class="form-control" name="username" placeholder="请输入用户名" maxlength="20"
+                           type="text">
+                </div>
+
+                <span style="color:red;display: none;" class="tips"></span>
+                <span style="display: none;" class=" glyphicon glyphicon-remove form-control-feedback"></span>
+                <span style="display: none;" class="glyphicon glyphicon-ok form-control-feedback"></span>
+            </div>
+
+            <div class="form-group has-feedback">
+                <label for="password">密码</label>
+                <div class="input-group">
+                    <span class="input-group-addon"><span class="glyphicon glyphicon-lock"></span></span>
+                    <input id="password" class="form-control" name="password" placeholder="请输入密码" maxlength="20"
+                           type="password">
+                </div>
+
+                <span style="color:red;display: none;" class="tips"></span>
+                <span style="display: none;" class="glyphicon glyphicon-remove form-control-feedback"></span>
+                <span style="display: none;" class="glyphicon glyphicon-ok form-control-feedback"></span>
+            </div>
+
+            <div class="form-group">
+                <input class="form-control btn btn-primary" id="submit"
+                       value="立&nbsp;&nbsp;即&nbsp;&nbsp;登&nbsp;&nbsp;录">
+            </div>
+
+            <div class="form-group">
+                <a href="{% url 'user:register' %}">还没帐号?前往注册</a>
+                <a href="{% url 'user:index' %}" style="float: right">返回主页</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    {% if status %}
+        {% if status == 'success' %}
+            $('.alert').remove();
+            var div_info = $('<div>注册成功请登录</div>');
+            div_info.attr('class', 'alert alert-success');
+            div_info.attr('alert', 'alert');
+            div_info.css({'text-align': 'center'});
+            $('#form').prepend(div_info);
+        {% endif %}
+    {% endif %}
+
+    {% if next %}
+        $('.alert').remove();
+        var div_info = $('<div>请先登录</div>');
+        div_info.attr('class', 'alert alert-danger');
+        div_info.attr('alert', 'alert');
+        div_info.css({'text-align': 'center'});
+        $('#form').prepend(div_info);
+    {% endif %}
+
+
+    $('#submit').click(function () {
+        var username = $('#username').val();
+        var password = $('#password').val();
+        if (username == null || username.length <= 0 || password == null || password.length <= 0) {
+            $('.alert').remove();
+            var div_info = $('<div>用户名或密码不能为空</div>');
+            div_info.attr('class', 'alert alert-danger');
+            div_info.attr('alert', 'alert');
+            div_info.css({'text-align': 'center'});
+            $('#form').prepend(div_info);
+        } else {
+            $.ajax({
+                url: '{% url "user:login" %}',
+                method: 'post',
+                data: {
+                    username: username,
+                    password: password,
+                },
+                dataType: 'text',
+                success: function (data) {
+                    var next = '{{ next }}';
+                    if (data == 'success') {
+                        if (next=='None')
+                            window.location.href = "{% url 'user:index' %}";
+                        else
+                            window.location.href = next;
+                    } else {
+                        $('.alert').remove();
+                        var div_info = $('<div>用户名或密码错误</div>');
+                        div_info.attr('class', 'alert alert-danger');
+                        div_info.attr('alert', 'alert');
+                        div_info.css({'text-align': 'center'});
+                        $('#form').prepend(div_info);
+                    }
+
+                }
+
+            })
+        }
+
+    });
+
+</script>
+
+</body>
+</html>

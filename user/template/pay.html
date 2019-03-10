@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>happi--支付</title>
+
+</head>
+<body>
+<div style="text-align: center">
+    支付成功...
+    <br>
+    <br>
+    <span id="show"></span>
+</div>
+<script>
+    var t = 3;
+    setInterval('time()', 1000);
+
+    function time() {
+        if (t == 0) {
+            window.location.href = "{% url 'user:submit_order'  %}";
+        } else {
+            document.getElementById('show').innerHTML=''+t+'后跳转到订单界面';
+        }
+        t--;
+
+
+    }
+
+
+</script>
+
+</body>
+</html>

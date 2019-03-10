@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <script src="/static/js/jquery.min.js"></script>
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <script src="/static/js/bootstrap.min.js"></script>
+    <link href="/static/css/style.css" rel="stylesheet">
+    <script>
+        function formatMoney(num) {
+            num = num.toString().replace(/\$|\,/g, '');
+            if (isNaN(num))
+                num = "0";
+            sign = (num == (num = Math.abs(num)));
+            num = Math.floor(num * 100 + 0.50000000001);
+            cents = num % 100;
+            num = Math.floor(num / 100).toString();
+            if (cents < 10)
+                cents = "0" + cents;
+            for (var i = 0; i < Math.floor((num.length - (1 + i)) / 3); i++)
+                num = num.substring(0, num.length - (4 * i + 3)) + ',' +
+                    num.substring(num.length - (4 * i + 3));
+            return (((sign) ? '' : '-') + num + '.' + cents);
+        }
+
+        function checkEmpty(id, name) {
+            var value = $("#" + id).val();
+            if (value.length == 0) {
+
+                $("#" + id)[0].focus();
+                return false;
+            }
+            return true;
+        }
+
+
+        $(function () {
+
+
+            $("a.productDetailTopReviewLink").click(function () {
+                $("div.productReviewDiv").show();
+                $("div.productDetailDiv").hide();
+            });
+            $("a.productReviewTopPartSelectedLink").click(function () {
+                $("div.productReviewDiv").hide();
+                $("div.productDetailDiv").show();
+            });
+
+            $("span.leaveMessageTextareaSpan").hide();
+            $("img.leaveMessageImg").click(function () {
+
+                $(this).hide();
+                $("span.leaveMessageTextareaSpan").show();
+                $("div.orderItemSumDiv").css("height", "100px");
+            });
+
+
+        });
+
+    </script>
+</head>
+<body style="">
+
+<nav class="top ">
+    <div class="top_middle">
+
+
+        <a href="{% url 'user:index' %}">
+            <span style="color:#C40000;margin:0px" class=" glyphicon glyphicon-home redColor"></span>
+            happi_edu首页
+        </a>
+
+        <span>Hi，欢迎来happi_edu</span>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+        {% if user.username %}
+            <a href='#'>{{ user.username }}</a>
+            <a href="{% url 'user:logout' %}">退出</a>
+        {% else %}
+            <a href='{% url "user:login" %}'>请登录</a>
+            <a href="{% url 'user:register' %}">免费注册</a>
+        {% endif %}
+
+
+
+        <span class="pull-right">
+			<a href="{% url 'user:my_car' %}">
+			<span style="color:#C40000;margin:0px" class=" glyphicon glyphicon-shopping-cart redColor"></span>
+			购物车</a>
+            <a href="{% url 'user:submit_order' %}">我的订单</a>
+		</span>
+    </div>
+</nav>
+
+<div class="searchOutDiv">
+    <a href="#">
+    </a>
+    <form action="{% url 'user:search' %}" method="get" onsubmit="return check()">
+        <div class="searchDiv" style="width: 1000px;">
+            <input id="key" name="keyword" type="text" value="" style="width: 850px;" placeholder="输入课程名进行搜索">
+            <button type="submit" class="searchButton">搜索</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function check() {
+        var key = $('#key').val();
+        if (!key || key.length <= 0)
+            return false;
+        return true;
+    }
+</script>
+
+
+<title>happi_edu--主页</title>
+
+<div class="homepageDiv">
+
+    <script>
+        function showProductsAsideCategorys(cid) {
+            $("div.eachCategory[cid=" + cid + "]").css("background-color", "white");
+            $("div.eachCategory[cid=" + cid + "] a").css("color", "#87CEFA");
+            $("div.productsAsideCategorys[cid=" + cid + "]").show();
+        }
+
+
+        function hideProductsAsideCategorys(cid) {
+            $("div.eachCategory[cid=" + cid + "]").css("background-color", "#e2e2e3");
+            $("div.eachCategory[cid=" + cid + "] a").css("color", "#000");
+            $("div.productsAsideCategorys[cid=" + cid + "]").hide();
+        }
+
+        $(function () {
+            $("div.eachCategory").mouseenter(function () {
+                var cid = $(this).attr("cid");
+                showProductsAsideCategorys(cid);
+            });
+            $("div.eachCategory").mouseleave(function () {
+                var cid = $(this).attr("cid");
+                hideProductsAsideCategorys(cid);
+            });
+            $("div.productsAsideCategorys").mouseenter(function () {
+                var cid = $(this).attr("cid");
+                showProductsAsideCategorys(cid);
+            });
+            $("div.productsAsideCategorys").mouseleave(function () {
+                var cid = $(this).attr("cid");
+                hideProductsAsideCategorys(cid);
+            });
+
+            $("div.rightMenu span").mouseenter(function () {
+                var left = $(this).position().left;
+                var top = $(this).position().top;
+                var width = $(this).css("width");
+                var destLeft = parseInt(left) + parseInt(width) / 2;
+                $("img#catear").css("left", destLeft);
+                $("img#catear").css("top", top - 20);
+                $("img#catear").fadeIn(500);
+
+            });
+            $("div.rightMenu span").mouseleave(function () {
+                $("img#catear").hide();
+            });
+
+            var left = $("div#carousel-of-product").offset().left;
+            $("div.categoryMenu").css("left", left - 20);
+            $("div.categoryWithCarousel div.head").css("margin-left", left);
+            $("div.productsAsideCategorys").css("left", left - 20);
+
+
+        });
+    </script>
+
+    <img src="/static/img/catear.png" id="catear" class="catear">
+
+    <div class="categoryWithCarousel">
+
+
+        <div class="headbar show1">
+            <div class="head " style="margin-left: 247.6px;">
+
+                <span style="margin-left:10px" class="glyphicon glyphicon-th-list"></span>
+                <span id="menu" style="margin-left:10px">课程分类</span>
+
+            </div>
+
+            <div class="rightMenu">
+                <span><a href="http://how2j.cn/tmall/">
+                </a></span>
+                <span><a href="http://how2j.cn/tmall/">
+                </a></span>
+
+            </div>
+
+        </div>
+
+
+        <div style="position: relative">
+
+
+            <div class="categoryMenu" style="left: 227.6px;display: none">
+
+                <div cid="82" class="eachCategory" style="background-color: rgb(226, 226, 227);">
+                    <span class="glyphicon glyphicon-link"></span>
+                    <a href="#div_1" style="color: rgb(0, 0, 0);">
+                        Python
+                    </a>
+                </div>
+
+                <div cid="81" class="eachCategory" style="background-color: rgb(226, 226, 227);">
+                    <span class="glyphicon glyphicon-link"></span>
+                    <a href="#div_2" style="color: rgb(0, 0, 0);">
+                        Java
+                    </a>
+                </div>
+
+                <div cid="80" class="eachCategory" style="background-color: rgb(226, 226, 227);">
+                    <span class="glyphicon glyphicon-link"></span>
+                    <a href="#div_3" style="color: rgb(0, 0, 0);">
+                        C
+                    </a>
+                </div>
+
+                <div cid="79" class="eachCategory" style="background-color: rgb(226, 226, 227);">
+                    <span class="glyphicon glyphicon-link"></span>
+                    <a href="#div_4" style="color: rgb(0, 0, 0);">
+                        C++
+                    </a>
+                </div>
+
+                <div cid="78" class="eachCategory" style="background-color: rgb(226, 226, 227);">
+                    <span class="glyphicon glyphicon-link"></span>
+                    <a href="#div_5" style="color: rgb(0, 0, 0);">
+                        PHP
+                    </a>
+                </div>
+
+
+            </div>
+        </div>
+
+        <div style="position: relative;left: 0;top: 0;">
+
+
+            <script>
+                $(function () {
+                    $("div.productsAsideCategorys div.row a").each(function () {
+                        var v = Math.round(Math.random() * 6);
+                        if (v == 1)
+                            $(this).css("color", "#87CEFA");
+                    });
+                });
+
+            </script>
+
+
+        </div>
+
+        {#        轮播#}
+        <div id="carousel-of-product" class="carousel-of-product carousel slide1" data-ride="carousel">
+            <!-- Indicators -->
+            <ol class="carousel-indicators">
+                <li data-target="#carousel-of-product" data-slide-to="0" class=""></li>
+                <li data-target="#carousel-of-product" data-slide-to="1" class=""></li>
+                <li data-target="#carousel-of-product" data-slide-to="2" class=""></li>
+                <li data-target="#carousel-of-product" data-slide-to="3" class="active"></li>
+            </ol>
+
+            <!-- Wrapper for slides -->
+            <div class="carousel-inner" role="listbox">
+
+            </div>
+        </div>
+
+        <div class="carouselBackgroundDiv">
+        </div>
+
+    </div>
+
+
+    <div class="homepageCategoryProducts">
+
+
+        <div class="eachHomepageCategoryProducts" id="div_1">
+            <div class="left-mark"></div>
+            <span class="categoryTitle">Python</span>
+            <br>
+        </div>
+
+
+        <div class="eachHomepageCategoryProducts" id="div_2">
+            <div class="left-mark"></div>
+            <span class="categoryTitle">Java</span>
+            <br>
+
+        </div>
+
+
+        <div class="eachHomepageCategoryProducts" id="div_3">
+            <div class="left-mark"></div>
+            <span class="categoryTitle">C</span>
+            <br>
+
+
+        </div>
+
+
+        <div class="eachHomepageCategoryProducts" id="div_4">
+            <div class="left-mark"></div>
+            <span class="categoryTitle">C++</span>
+            <br>
+
+        </div>
+
+
+        <div class="eachHomepageCategoryProducts" id="div_5">
+            <div class="left-mark"></div>
+            <span class="categoryTitle">PHP</span>
+            <br>
+
+        </div>
+
+    </div>
+</div>
+
+
+<script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+document.write(unescape("%3Cspan id='cnzz_stat_icon_1273069248'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s13.cnzz.com/stat.php%3Fid%3D1273069248%26show%3Dpic1' type='text/javascript'%3E%3C/script%3E"));</script>
+<span id="cnzz_stat_icon_1273069248"></span>
+<script src="/static/img/stat.php" type="text/javascript"></script>
+
+<script>
+
+
+    $('#menu').mouseover(function () {
+        $('.categoryMenu').css('display', 'block');
+    });
+
+    $('.categoryMenu').mouseleave(function () {
+        $('.categoryMenu').css('display', 'none');
+    });
+
+    $('.carousel-inner').each(function (i, n) {
+        $.ajax({
+            url: "{% url 'user:carousel' %}",
+            method: 'post',
+            data: null,
+            dataType: 'json',
+            success: function (data) {
+                for (key in data) {
+                    var src = data[key];
+                    var div_inner = $('<div></div>');
+                    div_inner.attr('class', 'item');
+                    if (key == data.length - 1) {
+                        div_inner.attr('class', "item active");
+                    }
+                    var img_inner = $('<img></img>');
+                    img_inner.attr('class', 'carouselImage')
+                    if (key == 0)
+                        img_inner.attr('class', 'carousel carouselImage');
+                    img_inner.attr('src', src);
+
+                    div_inner.append(img_inner);
+                    $(n).append(div_inner);
+                }
+            }
+        })
+    });
+
+    $('.eachHomepageCategoryProducts').each(function (i, n) {
+        var category = $(n).children('span').text();
+
+        $.ajax({
+            url: "{% url 'user:get_show_info' %}",
+            method: 'post',
+            data: {
+                category: category
+            },
+            dataType: 'json',
+            success: function (data) {
+                for (key in data) {
+                    var Item = data[key];
+                    var div_item = $('<div></div>');
+                    div_item.attr('class', 'productItem');
+                    var div_a = $('<a></a>');
+                    div_a.attr('href', 'show_info/' + Item.id);
+                    var img = $('<img></img>');
+                    img.attr('src', Item.src);
+                    div_a.append(img);
+                    div_item.append(div_a);
+
+                    var div_a2 = $('<a></a>');
+                    div_a2.attr('href', 'show_info/' + Item.id);
+                    div_a2.attr('calss', 'productItemDescLink');
+                    var span = $('<span></span>');
+                    span.attr('class', 'productItemDesc');
+                    span.text(Item.name);
+                    span.css({'font-size': 14, 'text-align': 'center', 'height': '70px'});
+                    div_a2.append(span);
+                    div_item.append(div_a2);
+
+                    var div_div = $('<div><div>');
+                    div_div.css({'height': '25px', 'text-align': 'center', 'font-size': 14});
+                    div_div.text('评分:' + Item.grade)
+                    div_item.append(div_div);
+
+
+                    $(n).append(div_item);
+
+                }
+                var last_div = $('<div></div>');
+                last_div.css('clear', 'both');
+                $(n).append(last_div);
+            }
+
+        })
+
+
+    });
+
+    var isEnd = false;
+    var total_load = 2;
+    $(window).scroll(function () {
+        // 滑动轴距离顶部的距离
+        var scrollTop = $(this).scrollTop();
+        // 文档的高度
+        var scrollHeight = $(document).height();
+        // 当前页面的高度
+        var clientHeight = $(this).height();
+
+        if (scrollHeight - clientHeight - scrollTop == 0 && !isEnd) {
+            // 创建加载的标志
+            var div_load = $('<div></div>');
+            div_load.attr('class', 'load');
+            div_load.css({'height': '40px', 'text-align': 'center'});
+
+            var img = $('<img></img>');
+            img.attr('src', '/static/img/load.gif');
+            img.css({'width': '40px'});
+            div_load.append(img);
+
+            var tip = $('<span></span>');
+            tip.text("玩儿命加载中...");
+            div_load.append(tip);
+
+            $('.homepageCategoryProducts').append(div_load);
+            isEnd = true;
+
+            $.ajax({
+                url: "{% url 'user:get_more_info' %}",
+                method: 'post',
+                data: {time: total_load},
+                dataType: 'json',
+                success: function (all_data) {
+                    total_load--;
+                    $('.load').remove();
+                    for (key1 in all_data) {
+                        var data = all_data[key1];
+
+                        var big_div = $('<div></div>');
+                        big_div.attr('class', 'eachHomepageCategoryProducts');
+
+                        var div1 = $('<div></div>');
+                        div1.attr('class', 'left-mark');
+                        big_div.append(div1);
+
+                        var span1 = $('<span></span>');
+                        span1.attr('class', 'categoryTitle');
+                        span1.text(data[key].category);
+                        big_div.append(span1);
+
+                        big_div.append('<br>');
+
+                        for (key in data) {
+
+
+                            var Item = data[key];
+                            var div_item = $('<div></div>');
+                            div_item.attr('class', 'productItem');
+                            var div_a = $('<a></a>');
+                            div_a.attr('href', 'show_info/' + Item.id);
+                            var img = $('<img></img>');
+                            img.attr('src', Item.src);
+                            div_a.append(img);
+                            div_item.append(div_a);
+
+                            var div_a2 = $('<a></a>');
+                            div_a2.attr('href', 'show_info/' + Item.id);
+                            div_a2.attr('calss', 'productItemDescLink');
+                            var span = $('<span></span>');
+                            span.attr('class', 'productItemDesc');
+                            span.text(Item.name);
+                            span.css({'font-size': 14, 'text-align': 'center', 'height': '70px'});
+                            div_a2.append(span);
+                            div_item.append(div_a2);
+
+                            var div_div = $('<div><div>');
+                            div_div.css({'height': '25px', 'text-align': 'center', 'font-size': 14});
+                            div_div.text('评分:' + Item.grade);
+                            div_item.append(div_div);
+
+
+                            big_div.append(div_item);
+
+                        }
+
+                        var last_div = $('<div></div>');
+                        last_div.css('clear', 'both');
+                        big_div.append(last_div);
+
+                        $('.homepageCategoryProducts').append(big_div);
+                        if (total_load > 0)
+                            isEnd = false;
+
+                    }
+                    if (total_load <= 0) {
+                        var img = $('<img></img>');
+                        img.attr('id', "endpng");
+                        img.attr('class', "endpng");
+                        img.attr('src', "/static/img/end.png");
+                        $('.homepageCategoryProducts').append(img);
+
+                    }
+
+                },
+
+            });
+        }
+    });
+
+
+</script>
+
+
+</body>
+
+</html>

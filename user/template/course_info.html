@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>happi-课程信息</title>
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+    <script src="/static/js/jquery.min.js"></script>
+
+    <style>
+        body {
+            background-color: lightgray;
+        }
+    </style>
+
+</head>
+<body>
+
+<nav class="top ">
+    <div class="top_middle">
+
+
+        <a href="{% url 'user:index' %}">
+            <span style="color:#C40000;margin:0px" class=" glyphicon glyphicon-home redColor"></span>
+            happi_edu首页
+        </a>
+
+        <span>Hi，欢迎来happi_edu</span>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+        {% if user.username %}
+            <a href='#'>{{ user.username }}</a>
+            <a href="{% url 'user:logout' %}">退出</a>
+        {% else %}
+            <a href='{% url "user:login" %}'>请登录</a>
+            <a href="{% url 'user:register' %}">免费注册</a>
+        {% endif %}
+
+
+
+        <span class="pull-right">
+			<a href="{% url 'user:my_car' %}">
+			<span style="color:#C40000;margin:0px" class=" glyphicon glyphicon-shopping-cart redColor"></span>
+			购物车<strong></strong></a>
+            <a href="{% url 'user:submit_order' %}">我的订单</a>
+		</span>
+    </div>
+</nav>
+
+<div style="margin-top: 60px;height: 300px;">
+    <div style="float: left;width: 450px;height:300px;"></div>
+    <div style="float: left;width: 1020px;height:300px;background-color: white">
+        <div style="float:left;height: 100%;width: 500px;padding-top: 15px;padding-bottom: 15px;padding-left: 10px;">
+            <img src="{{ course.image_url }}" alt="" style="border: solid;height: 100%">
+        </div>
+        <div style="float: left;width: 520px;height: 100%;padding-top: 15px;padding-bottom: 15px;padding-left: 10px;">
+            <div style="font-size: 14pt;height: 40px;">
+                课程名称:&nbsp;&nbsp;{{ course.name }}
+            </div>
+            <div style="font-size: 14pt;height: 40px;">
+                单价:&nbsp;&nbsp;￥{{ course.price }}
+            </div>
+            <div style="font-size: 14pt;height: 40px;">
+                评分:&nbsp;&nbsp;{{ course.grade }}
+            </div>
+            <div style="font-size: 14pt;height: 40px;">
+                适用人群:&nbsp;&nbsp;{{ course.suitable_for_croud }}
+            </div>
+            <div style="height: 40px;">
+                <div>
+                    <div style="font-size: 14pt;">
+                        数量:
+                        &nbsp;
+                        <button id="num_reduce" class="btn-subtract">
+                            -
+                        </button>
+
+                        &nbsp;&nbsp;
+
+                        <input id="num" type="text" class="input-counter" style="width: 50px;" value=1>
+                        &nbsp;&nbsp;
+                        <button id="num_add" class="btn-add">
+                            +
+                        </button>
+                    </div>
+                    <br>
+                    <br>
+                    <input id="submit" class="btn btn-primary" type="submit" value="加入购物车">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="float: right;width: 450px;height:300px;"></div>
+</div>
+
+
+</body>
+<script>
+    $("#num_add").click(function () {
+        var num = $("#num").val();
+        num = parseInt(num);
+        num += 1;
+        $("#num").val(num);
+    });
+    $("#num_reduce").click(function () {
+        var num = $("#num").val();
+        num = parseInt(num);
+        if (num > 1)
+            num -= 1;
+        $("#num").val(num);
+    });
+
+    $('#submit').click(function () {
+        {% if not user.username %}
+            window.location.href = '/login?next=/show_info/' +'{{ course.id }}';
+        {% else %}
+            var num = $("#num").val();
+            num = parseInt(num);
+            $.ajax({
+                url: "{% url 'user:add_car' %}",
+                method: 'post',
+                data: {
+                    course_id:{{ course.id }},
+                    count: num,
+                },
+                dataType: 'text',
+                success: function (data) {
+                    if (data == 'success')
+                        window.location.href = '/my_car';
+                }
+
+            })
+        {% endif %}
+
+    });
+</script>
+
+
+</html>
